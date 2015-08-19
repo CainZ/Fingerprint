@@ -1,25 +1,28 @@
 #include <fingerprint.h>
 
 #include <SoftwareSerial.h>
+#define EmptyAllFingerPrint 0 //If you want Empty fingerprint set 1,if you not set 0
 
 // pin #2 is IN from sensor (GREEN wire)
 // pin #3 is OUT from arduino  (WHITE wire)
 
 SoftwareSerial mySerial(2, 3);
 
-
+static int id = 0;
 Fingerprint finger = Fingerprint(&mySerial);
 
-void setup()  
+void setup()
 {
   Serial.begin(9600);
   Serial.println("fingertest");
 
   // set the data rate for the sensor serial port
   finger.begin(57600);
-  
+
   if (finger.verifyPassword()) {
     Serial.println("Found fingerprint sensor!");
+    if(EmptyAllFingerPrint)
+    {finger.empty();}
   } else {
     Serial.println("Did not find fingerprint sensor :(");
     while (1);
@@ -29,41 +32,50 @@ void setup()
 void loop()                     // run over and over again
 {
   Serial.println("Type in the ID # you want to save this finger as...");
-  uint8_t id = 0;
-  while (true) {
-    while (! Serial.available());
-    char c = Serial.read();
-    if (! isdigit(c)) break;
-    id *= 10;
-    id += c - '0';
+
+//  while (true) {   
+//    while (! Serial.available());
+//    char c = Serial.read();
+//    Serial.println(c);
+//    if (! isdigit(c)) break;
+//    id *= 10;
+//    id += c - '0';
+//  }
+while(!Serial.available());
+  if (Serial.available())
+  {
+    id =  Serial.parseInt();
   }
   Serial.print("Enrolling ID #");
   Serial.println(id);
-  
-  while (!  getFingerprintEnroll(id) );
+
+  //  while (! getFingerprintEnroll(id) );
+  getFingerprintEnroll(id);
+
 }
 
-uint8_t getFingerprintEnroll(uint8_t id) {
-  uint8_t p = -1;
+unsigned int getFingerprintEnroll(int ID) {
+  Serial.println(ID);
+  unsigned int p = -1;
   Serial.println("Waiting for valid finger to enroll");
   while (p != FINGERPRINT_OK) {
     p = finger.getImage();
     switch (p) {
-    case FINGERPRINT_OK:
-      Serial.println("Image taken");
-      break;
-    case FINGERPRINT_NOFINGER:
-      Serial.println(".");
-      break;
-    case FINGERPRINT_PACKETRECIEVEERR:
-      Serial.println("Communication error");
-      break;
-    case FINGERPRINT_IMAGEFAIL:
-      Serial.println("Imaging error");
-      break;
-    default:
-      Serial.println("Unknown error");
-      break;
+      case FINGERPRINT_OK:
+        Serial.println("Image taken");
+        break;
+      case FINGERPRINT_NOFINGER:
+        Serial.println(".");
+        break;
+      case FINGERPRINT_PACKETRECIEVEERR:
+        Serial.println("Communication error");
+        break;
+      case FINGERPRINT_IMAGEFAIL:
+        Serial.println("Imaging error");
+        break;
+      default:
+        Serial.println("Unknown error");
+        break;
     }
   }
 
@@ -90,7 +102,7 @@ uint8_t getFingerprintEnroll(uint8_t id) {
       Serial.println("Unknown error");
       return p;
   }
-  
+
   Serial.println("Remove finger");
   delay(2000);
   p = 0;
@@ -103,21 +115,21 @@ uint8_t getFingerprintEnroll(uint8_t id) {
   while (p != FINGERPRINT_OK) {
     p = finger.getImage();
     switch (p) {
-    case FINGERPRINT_OK:
-      Serial.println("Image taken");
-      break;
-    case FINGERPRINT_NOFINGER:
-      Serial.print(".");
-      break;
-    case FINGERPRINT_PACKETRECIEVEERR:
-      Serial.println("Communication error");
-      break;
-    case FINGERPRINT_IMAGEFAIL:
-      Serial.println("Imaging error");
-      break;
-    default:
-      Serial.println("Unknown error");
-      break;
+      case FINGERPRINT_OK:
+        Serial.println("Image taken");
+        break;
+      case FINGERPRINT_NOFINGER:
+        Serial.print(".");
+        break;
+      case FINGERPRINT_PACKETRECIEVEERR:
+        Serial.println("Communication error");
+        break;
+      case FINGERPRINT_IMAGEFAIL:
+        Serial.println("Imaging error");
+        break;
+      default:
+        Serial.println("Unknown error");
+        break;
     }
   }
 
@@ -144,8 +156,9 @@ uint8_t getFingerprintEnroll(uint8_t id) {
       Serial.println("Unknown error");
       return p;
   }
-  
-  
+
+  Serial.println("Remove finger");
+  delay(2000);
   // OK converted!
   p = finger.createModel();
   if (p == FINGERPRINT_OK) {
@@ -159,9 +172,9 @@ uint8_t getFingerprintEnroll(uint8_t id) {
   } else {
     Serial.println("Unknown error");
     return p;
-  }   
-  
-  p = finger.storeModel(id);
+  }
+  Serial.println(ID);
+  p = finger.storeModel(ID);
   if (p == FINGERPRINT_OK) {
     Serial.println("Stored!");
   } else if (p == FINGERPRINT_PACKETRECIEVEERR) {
@@ -176,5 +189,8 @@ uint8_t getFingerprintEnroll(uint8_t id) {
   } else {
     Serial.println("Unknown error");
     return p;
-  }   
+  }
+  Serial.println("  ");
+  Serial.println("  ");
+  Serial.println("  ");
 }
