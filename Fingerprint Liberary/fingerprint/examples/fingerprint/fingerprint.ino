@@ -1,6 +1,6 @@
 #include <fingerprint.h>
 
- #include <SoftwareSerial.h>
+#include <SoftwareSerial.h>
 
 
 int getFingerprintIDez();
@@ -36,6 +36,7 @@ void loop()                     // run over and over again
 }
 
 uint8_t getFingerprintID() {
+   Serial.println("Waiting for valid finger...");
   uint8_t p = finger.getImage();
   switch (p) {
     case FINGERPRINT_OK:
@@ -101,6 +102,7 @@ uint8_t getFingerprintID() {
 
 // returns -1 if failed, otherwise returns ID #
 int getFingerprintIDez() {
+   Serial.println("Waiting for valid finger...");
   uint8_t p = finger.getImage();
   if (p != FINGERPRINT_OK)  return -1;
 
